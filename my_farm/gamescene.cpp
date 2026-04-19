@@ -1,57 +1,45 @@
 #include "gamescene.h"
-#include <QDebug>
 
 GameScene::GameScene(QObject *parent) : QGraphicsScene(parent) {
-    // 1. 铺设农田网格
+    // 1. 初始化地图
     for (int y = 0; y < GRID_HEIGHT; ++y) {
         for (int x = 0; x < GRID_WIDTH; ++x) {
             FarmTile *tile = new FarmTile(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE);
             addItem(tile);
-            farmGrid.append(tile); // 存入列表方便后续查找
+            farmGrid.append(tile);
         }
     }
 
-    // 2. 添加玩家
+    // 2. 初始化玩家
     player = new Player(TILE_SIZE);
     addItem(player);
-    player->setPos(0, 0); // 初始位置
+    player->setPos(0, 0);
 
-    // 3. 启动时间流逝（模拟星露谷的每天/每tick）
+    // 3. 游戏时间循环
     dayTimer = new QTimer(this);
     connect(dayTimer, &QTimer::timeout, this, &GameScene::onDayPass);
-    dayTimer->start(5000); // 为了测试，每 5 秒钟植物生长一次（现实中对应一天结束）
+    dayTimer->start(10000); // 每10秒植物长一轮
 }
 
 void GameScene::keyPressEvent(QKeyEvent *event) {
-    int currentX = player->x();
-    int currentY = player->y();
+    int x = player->x();
+    int y = player->y();
 
-    // WASD 移动逻辑 (按格子移动)
-    if (event->key() == Qt::Key_W && currentY > 0) {
-        player->setPos(currentX, currentY - TILE_SIZE);
-    } else if (event->key() == Qt::Key_S && currentY < (GRID_HEIGHT - 1) * TILE_SIZE) {
-        player->setPos(currentX, currentY + TILE_SIZE);
-    } else if (event->key() == Qt::Key_A && currentX > 0) {
-        player->setPos(currentX - TILE_SIZE, currentY);
-    } else if (event->key() == Qt::Key_D && currentX < (GRID_WIDTH - 1) * TILE_SIZE) {
-        player->setPos(currentX + TILE_SIZE, currentY);
-    }
-    // 空格键交互逻辑 (种田)
+    if (event->key() == Qt::Key_W && y > 0) y -= TILE_SIZE;
+    else if (event->key() == Qt::Key_S && y < (GRID_HEIGHT-1)*TILE_SIZE) y += TILE_SIZE;
+    else if (event->key() == Qt::Key_A && x > 0) x -= TILE_SIZE;
+    else if (event->key() == Qt::Key_D && x < (GRID_WIDTH-1)*TILE_SIZE) x += TILE_SIZE;
     else if (event->key() == Qt::Key_Space) {
-        // 计算玩家现在踩在哪个格子上
         int gridX = player->x() / TILE_SIZE;
         int gridY = player->y() / TILE_SIZE;
-        int index = gridY * GRID_WIDTH + gridX;
-
-        if (index >= 0 && index < farmGrid.size()) {
-            farmGrid[index]->interact(); // 让脚下这块土地触发动作！
-        }
+        farmGrid[gridY * GRID_WIDTH + gridX]->interact();
+        return;
     }
+
+    player->setPos(x, y);
 }
 
 void GameScene::onDayPass() {
-    qDebug() << "新的一天开始了！植物正在生长...";
-    // 遍历所有土地，调用生长逻辑
     for (FarmTile *tile : farmGrid) {
         tile->grow();
     }

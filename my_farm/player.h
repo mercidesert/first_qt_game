@@ -1,12 +1,15 @@
 #ifndef PLAYER_H
 #define PLAYER_H
 
-#include <QGraphicsRectItem>
-#include <QBrush>
+#include <QGraphicsPixmapItem>
 
-class Player : public QGraphicsRectItem {
+class Player : public QGraphicsPixmapItem {
 public:
     Player(int size);
+    void updateAppearance(QString direction); // 可以根据方向换图
+
+private:
+    int playerSize;
 };
 
-#endif // PLAYER_H
+#endif

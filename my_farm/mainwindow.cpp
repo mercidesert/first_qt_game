@@ -1,32 +1,16 @@
 #include "mainwindow.h"
-#include "ui_mainwindow.h"
-#include "gamescene.h"
-#include <QGraphicsView>
 
-MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent)
-    , ui(new Ui::MainWindow)
-{
-    ui->setupUi(this);
+MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
+    // 1. 创建场景
+    scene = new GameScene(this);
 
-    // 实例化游戏场景
-    GameScene *scene = new GameScene(this);
+    // 2. 创建视图并设置场景
+    view = new QGraphicsView(scene, this);
 
-    // 创建视图来显示场景
-    QGraphicsView *view = new QGraphicsView(scene, this);
-
-    // 关掉滚动条，固定视角
-    view->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    view->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-
-    // 把游戏视图设置为窗口的中心部件
+    // 3. 将视图设置为 MainWindow 的中心组件
     setCentralWidget(view);
 
-    // 稍微调大一点窗口，刚好装下 10x10 格子 (400x400)
-    resize(450, 450);
-}
-
-MainWindow::~MainWindow()
-{
-    delete ui;
+    // 设置窗口大小
+    setFixedSize(600, 600);
+    setWindowTitle("Stardew Valley Qt");
 }

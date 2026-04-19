@@ -1,0 +1,10 @@
+<RCC>
+    <qresource prefix="/">
+        <file>images/sprout.png</file>
+        <file>images/dirt.png</file>
+        <file>images/grass.png</file>
+        <file>images/player_down.png</file>
+        <file>images/mature.png</file>
+        <file>images/tileset_32x32.png</file>
+    </qresource>
+</RCC>

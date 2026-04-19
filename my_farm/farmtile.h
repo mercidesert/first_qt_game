@@ -1,28 +1,20 @@
 #ifndef FARMTILE_H
 #define FARMTILE_H
 
-#include <QGraphicsRectItem>
-#include <QBrush>
+#include <QGraphicsPixmapItem>
 
-// 定义土地的四种状态
-enum TileState {
-    Untilled,   // 荒地
-    Tilled,     // 已开垦
-    Planted,    // 已播种
-    Mature      // 已成熟（可收获）
-};
-
-class FarmTile : public QGraphicsRectItem {
+class FarmTile : public QGraphicsPixmapItem {
 public:
+    enum TileState { Untilled, Tilled, Planted, Mature };
+
     FarmTile(int x, int y, int size);
-
-    void interact(); // 玩家按空格时的互动逻辑
-    void grow();     // 每天/每隔一段时间的生长逻辑
-
-    TileState currentState;
+    void interact(); // 交互逻辑
+    void grow();     // 生长逻辑
 
 private:
-    void updateColor(); // 根据状态改变颜色（以后这里换成改图片）
+    TileState currentState;
+    int tileSize;
+    void updateTexture(); // 根据状态更新图片
 };
 
-#endif // FARMTILE_H
+#endif
