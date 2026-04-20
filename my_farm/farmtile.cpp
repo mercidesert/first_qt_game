@@ -7,14 +7,26 @@ FarmTile::FarmTile(int x, int y, int size) : tileSize(size) {
     updateTexture();
 }
 
-void FarmTile::interact() {
+bool FarmTile::interact() {
+    bool harvested = false; // 默认没有收获
+
     switch (currentState) {
-    case Untilled: currentState = Tilled; break;
-    case Tilled:   currentState = Planted; break;
-    case Mature:   currentState = Untilled; break; // 收割后变回荒地
-    default: break;
+    case Untilled:
+        currentState = Tilled;
+        break;
+    case Tilled:
+        currentState = Planted;
+        break;
+    case Planted:
+        // 正在生长，不能收获
+        break;
+    case Mature:
+        currentState = Untilled; // 收获后变回荒地
+        harvested = true;        // 标记收获成功！
+        break;
     }
     updateTexture();
+    return harvested; // 告诉 Scene 是否加分
 }
 
 void FarmTile::grow() {

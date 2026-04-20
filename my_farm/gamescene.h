@@ -2,6 +2,7 @@
 #define GAMESCENE_H
 
 #include <QGraphicsScene>
+#include <QGraphicsTextItem>
 #include <QTimer>
 #include <QKeyEvent>
 #include <QVector>
@@ -12,6 +13,9 @@ class GameScene : public QGraphicsScene {
     Q_OBJECT
 public:
     explicit GameScene(QObject *parent = nullptr);
+    int score=0;
+    QGraphicsTextItem *scoreText;
+    void updateScoreDisplay();
 
 protected:
     void keyPressEvent(QKeyEvent *event) override;
@@ -30,3 +34,4 @@ private:
 };
 
 #endif
+

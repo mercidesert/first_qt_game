@@ -8,7 +8,7 @@ public:
     enum TileState { Untilled, Tilled, Planted, Mature };
 
     FarmTile(int x, int y, int size);
-    void interact(); // 交互逻辑
+    bool interact(); // 交互逻辑
     void grow();     // 生长逻辑
 
 private:
