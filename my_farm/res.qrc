@@ -1,10 +1,22 @@
 <RCC>
     <qresource prefix="/">
-        <file>images/sprout.png</file>
-        <file>images/dirt.png</file>
-        <file>images/grass.png</file>
         <file>images/player_down.png</file>
-        <file>images/mature.png</file>
-        <file>images/tileset_32x32.png</file>
+        <file>images/bg_fall.png</file>
+        <file>images/bg_spring.png</file>
+        <file>images/bg_summer.png</file>
+        <file>images/bg_winter.png</file>
+        <file>images/player_left.png</file>
+        <file>images/player_right.png</file>
+        <file>images/player_up.png</file>
+        <file>images/soil_plowed.png</file>
+        <file>images/straw_1_seed.png</file>
+        <file>images/straw_2_seedling.png</file>
+        <file>images/straw_3_grown.png</file>
+        <file>images/straw_4_fruiting.png</file>
+        <file>images/sun_1_seed.png</file>
+        <file>images/sun_2_seedling.png</file>
+        <file>images/sun_3_grown.png</file>
+        <file>images/sun_4_fruiting.png</file>
+        <file>images/player_harvest.png</file>
     </qresource>
 </RCC>
