@@ -18,5 +18,31 @@
         <file>images/sun_3_grown.png</file>
         <file>images/sun_4_fruiting.png</file>
         <file>images/player_harvest.png</file>
+        <file>images/player_down_1.png</file>
+        <file>images/player_down_2.png</file>
+        <file>images/player_down_3.png</file>
+        <file>images/player_down_4.png</file>
+        <file>images/player_left_1.png</file>
+        <file>images/player_left_2.png</file>
+        <file>images/player_left_3.png</file>
+        <file>images/player_left_4.png</file>
+        <file>images/player_right_1.png</file>
+        <file>images/player_right_2.png</file>
+        <file>images/player_right_3.png</file>
+        <file>images/player_right_4.png</file>
+        <file>images/player_up_1.png</file>
+        <file>images/player_up_2.png</file>
+        <file>images/player_up_3.png</file>
+        <file>images/player_up_4.png</file>
+        <file>images/feast.png</file>
+        <file>images/fish_1.png</file>
+        <file>images/fish_2.png</file>
+        <file>images/fish_3.png</file>
+        <file>images/fish_4.png</file>
+        <file>images/fish_5.png</file>
+        <file>images/fish_6.png</file>
+        <file>images/home.png</file>
+        <file>images/river_bg.png</file>
+        <file>images/title.png</file>
     </qresource>
 </RCC>
