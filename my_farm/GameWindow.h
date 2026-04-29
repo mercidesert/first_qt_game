@@ -25,13 +25,7 @@ struct Inventory {
 struct Player { int x = 5; int y = 5; Direction dir = Down; CropType selectedSeed = Strawberry; int animFrame = 0; };
 
 struct NPC { QString name; QRect clickArea; QStringList dialogues; };
-
-// --- 【修改】给音符加入轨道类型 ---
-struct RhythmNote {
-    float x;
-    int type; // 0代表下轨(SPACE), 1代表上轨(F键)
-};
-
+struct RhythmNote { float x; int type; };
 struct EasterEgg { QRect rect; bool found; };
 enum HomeState { HomeNormal, HomeTVPrompt, HomeTVShow };
 
@@ -70,6 +64,7 @@ private:
     void drawCombat(QPainter &painter);
     void drawEaster(QPainter &painter);
     void drawGlobalHUD(QPainter &painter);
+    void drawTextbox(QPainter &painter, int x, int y, int w, int h, QString text); // 绘制窄边框文本
 
     static const int TILE_W = 32;
     static const int TILE_H = 64;
@@ -104,6 +99,7 @@ private:
     int pierreClickCount;
     bool inShop;
 
+    // 钓鱼与宝箱
     enum FishState { FishIdle, FishWaiting, FishBiting, FishPlaying, FishResult };
     FishState fishState;
     int fishTimer;
@@ -111,6 +107,11 @@ private:
     float fishY, fishTarget;
     float catchProgress;
     bool isSpaceHeld;
+    bool hasTreasure;
+    int treasureState; // 0=关, 1~5=开启动画, 6=开启完毕
+    int treasureTimer;
+    int treasureRewardType;
+    int treasureRewardAmount;
 
     QList<RhythmNote> combatNotes;
     int playerHp;
@@ -132,27 +133,40 @@ private:
     int blindBoxIndex;
     QString homeMessages[6];
 
+    // 动画通用计数器
+    int fastAnimTimer;
+    int fastAnimFrame;
+
+    // 表情彩蛋
+    int emoteState; // 0=关, 1~4=冒出动画, 5=显示表情
+    int emoteTimer;
+    int emoteId;
+
+    // 图片资源
     QPixmap img_bgWinter, img_bgSpring, img_bgSummer, img_bgFall;
     QPixmap img_soilPlowed, img_playerHarvest;
     QPixmap img_strawSeed, img_strawSeedling, img_strawGrown, img_strawFruiting;
     QPixmap img_sunSeed, img_sunSeedling, img_sunGrown, img_sunFruiting;
     QPixmap img_playerWalk[4][4];
 
-    QPixmap img_titleBg;
-    QPixmap img_homeBg;
-    QPixmap img_feastBg;
-    QPixmap img_riverBg;
-    QPixmap img_fishIcon;
-    QPixmap img_envelope;
-    QPixmap img_enemy;
-    QPixmap img_note;
-    QPixmap img_easterBg;
-    QPixmap img_egg;
+    QPixmap img_titleBg, img_homeBg, img_feastBg, img_riverBg;
+    QPixmap img_fishIcon, img_envelope;
+    QPixmap img_enemy, img_note, img_easterBg, img_egg;
 
     QPixmap img_homeVariants[6];
     QPixmap img_fishes[6];
     int caughtFishIndex;
     QString fishNames[6];
+
+    // 【新增】全新素材资源
+    QPixmap img_combatBg;
+    QPixmap img_textbox;
+    QPixmap img_exit;
+    QPixmap img_boxClosed, img_boxOpen[5];
+    QPixmap img_bird[4], img_junimo[4];
+    QPixmap img_emoAnim[4], img_emos[15];
+
+    QRect exitBtnRect; // 退出按钮区域
 
     QTimer *timer;
     QTimer *fastTimer;

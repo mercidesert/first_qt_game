@@ -55,5 +55,41 @@
         <file>images/home_4.png</file>
         <file>images/home_5.png</file>
         <file>images/home_6.png</file>
+        <file>images/bird_1.png</file>
+        <file>images/bird_2.png</file>
+        <file>images/bird_3.png</file>
+        <file>images/bird_4.png</file>
+        <file>images/box_closed.png</file>
+        <file>images/box_o1.png</file>
+        <file>images/box_o2.png</file>
+        <file>images/box_o3.png</file>
+        <file>images/box_o4.png</file>
+        <file>images/box_o5.png</file>
+        <file>images/combat_bg.png</file>
+        <file>images/emo_1.png</file>
+        <file>images/emo_2.png</file>
+        <file>images/emo_3.png</file>
+        <file>images/emo_4.png</file>
+        <file>images/emo1.png</file>
+        <file>images/emo2.png</file>
+        <file>images/emo3.png</file>
+        <file>images/emo4.png</file>
+        <file>images/emo5.png</file>
+        <file>images/emo6.png</file>
+        <file>images/emo7.png</file>
+        <file>images/emo8.png</file>
+        <file>images/emo9.png</file>
+        <file>images/emo10.png</file>
+        <file>images/emo11.png</file>
+        <file>images/emo12.png</file>
+        <file>images/emo13.png</file>
+        <file>images/emo14.png</file>
+        <file>images/emo15.png</file>
+        <file>images/exit.png</file>
+        <file>images/junimo_1.png</file>
+        <file>images/junimo_2.png</file>
+        <file>images/junimo_3.png</file>
+        <file>images/junimo_4.png</file>
+        <file>images/textbox.png</file>
     </qresource>
 </RCC>

@@ -7,20 +7,22 @@ GameWindow::GameWindow(QWidget *parent)
     currentSeason(Winter), timeTicks(0),
     isHarvesting(false), harvestAnimTimer(0), dialogueTimer(0),
     abigailClickCount(0), pierreClickCount(0), inShop(false),
-    fishState(FishIdle), isSpaceHeld(false),
-    homeState(HomeNormal), blindBoxIndex(0)
+    fishState(FishIdle), isSpaceHeld(false), hasTreasure(false), treasureState(0),
+    homeState(HomeNormal), blindBoxIndex(0), fastAnimTimer(0), fastAnimFrame(0),
+    emoteState(0), emoteTimer(0), emoteId(0)
+//状态机定义
 {
     setFixedSize(MAP_COLS * TILE_W, MAP_ROWS * TILE_H);
-    setWindowTitle("星露谷 (双轨节奏高难版)");
+    setWindowTitle("星露农场 (简陋的简易版星露谷)");
 
     gold = 150;
     maxEnergy = 100;
     energy = 100;
     globalMsgTimer = 0;
-
     isInjured = false;
     harveyClickCount = 0;
     combatLevel = 1;
+    exitBtnRect = QRect(15, 570, 64, 54);  // 体力值背包等设置，统一退出键区域
 
     for (int r = 0; r < MAP_ROWS; ++r) {
         for (int c = 0; c < MAP_COLS; ++c) { map[r][c].isPlowed = false; map[r][c].crop = None; }
@@ -37,11 +39,12 @@ GameWindow::GameWindow(QWidget *parent)
     for (int d = 0; d < 4; ++d) {
         for (int f = 0; f < 4; ++f) { img_playerWalk[d][f] = loadAndScale(QString(":/images/player_%1_%2.png").arg(dirNames[d]).arg(f + 1)); }
     }
+    //玩家动态展示
     img_strawSeed = loadAndScale(":/images/straw_1_seed.png"); img_strawSeedling = loadAndScale(":/images/straw_2_seedling.png");
     img_strawGrown = loadAndScale(":/images/straw_3_grown.png"); img_strawFruiting = loadAndScale(":/images/straw_4_fruiting.png");
     img_sunSeed = loadAndScale(":/images/sun_1_seed.png"); img_sunSeedling = loadAndScale(":/images/sun_2_seedling.png");
     img_sunGrown = loadAndScale(":/images/sun_3_grown.png"); img_sunFruiting = loadAndScale(":/images/sun_4_fruiting.png");
-
+    //植物生长状态加载
     img_titleBg = loadBg(":/images/title.png"); img_homeBg = loadBg(":/images/home.png");
     img_feastBg = loadBg(":/images/feast.png"); img_riverBg = loadBg(":/images/river_bg.png");
     img_fishIcon = QPixmap(":/images/fish_icon.png").scaled(30, 30); img_envelope = QPixmap(":/images/envelope.png");
@@ -50,14 +53,32 @@ GameWindow::GameWindow(QWidget *parent)
     img_easterBg = loadBg(":/images/eastern.png");
     img_egg = QPixmap(":/images/egg.png").scaled(12, 12, Qt::KeepAspectRatio, Qt::SmoothTransformation);
 
+    img_combatBg = loadBg(":/images/combat_bg.png");
+    img_textbox = loadBg(":/images/textbox.png");
+    img_exit = QPixmap(":/images/exit.png").scaled(64, 54, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+    img_boxClosed = QPixmap(":/images/box_closed.png").scaled(48, 64, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+    for(int i=0; i<5; i++) img_boxOpen[i] = QPixmap(QString(":/images/box_o%1.png").arg(i+1)).scaled(48, 64, Qt::KeepAspectRatio);
+    for(int i=0; i<4; i++) img_bird[i] = QPixmap(QString(":/images/bird_%1.png").arg(i+1)).scaled(64, 64, Qt::KeepAspectRatio);
+    for(int i=0; i<4; i++) img_junimo[i] = QPixmap(QString(":/images/junimo_%1.png").arg(i+1)).scaled(64, 64, Qt::KeepAspectRatio);
+    for(int i=0; i<4; i++) img_emoAnim[i] = QPixmap(QString(":/images/emo_%1.png").arg(i+1)).scaled(32, 32, Qt::KeepAspectRatio);
+    for(int i=0; i<15; i++) img_emos[i] = QPixmap(QString(":/images/emo%1.png").arg(i+1)).scaled(32, 32, Qt::KeepAspectRatio);
+    //各类图片加载展示
+    // 加载6张装修盲盒图
     for(int i=0; i<6; i++) {
         img_homeVariants[i] = loadBg(QString(":/images/home_%1.png").arg(i+1));
-        homeMessages[i] = QString("（款式 %1）只要心中有光，每天都是温暖的晴天。").arg(i+1);
     }
 
+    //6个盲盒设定完全不一样的话语
+    homeMessages[0] = "骚动的绿，溪水从几何般的玫瑰中逃出来，打了个很有爱的盹";
+    homeMessages[1] = "水在月光中跪下，灯火四肢沉落，向草地匍匐。当我抵达河边，满月覆盖着它";
+    homeMessages[2] = "我相信自己，生来如同璀璨的夏花，不凋不败，妖冶如火";
+    homeMessages[3] = "你来人间一趟，你要看看太阳";
+    homeMessages[4] = "丛林再披青装，又是一年最美好的时光";
+    homeMessages[5] = "走向冬天，唱一支歌吧。不祝福，也不祈祷";
+
     caughtFishIndex = -1;
-    fishNames[0] = "绿藻"; fishNames[1] = "沙丁鱼"; fishNames[2] = "鲤鱼";
-    fishNames[3] = "大嘴鲈鱼"; fishNames[4] = "河豚"; fishNames[5] = "传说之鱼";
+    fishNames[0] = "河豚"; fishNames[1] = "金枪鱼"; fishNames[2] = "河鲈";
+    fishNames[3] = "鲇鱼"; fishNames[4] = "鱿鱼"; fishNames[5] = "海草";
     for (int i = 0; i < 6; ++i) img_fishes[i] = QPixmap(QString(":/images/fish_%1.png").arg(i + 1)).scaled(96, 96, Qt::KeepAspectRatio, Qt::SmoothTransformation);
 
     initNPCs();
@@ -74,8 +95,8 @@ void GameWindow::initNPCs() {
     };
     addNPC("Pierre", 24, 55, 54, 135, "如果你需要种子，明天记得来杂货店！", "就算过节我也在想着明天的营业额。", "其实当年我的拳击技术很厉害。");
     addNPC("Caroline", 21, 153, 55, 220, "这是我用温室种的茶叶泡的茶，尝尝吧。", "阿比盖尔这孩子又跑到哪里去了？", "节日祭典的布置真是花了不少心思。");
-    addNPC("Abigail", 176, 109, 204, 177, "嘿！你觉得今天我会赢下找冰蛋比赛吗？", "其实我觉得下雨天更适合出来逛。", "（嚼嚼嚼）这个紫水晶真好吃……");
-    addNPC("Shane", 25, 271, 54, 345, "……干嘛？别来烦我。", "给我来杯啤酒，不然我不想说话。", "玛妮阿姨做的披萨味道还不错。");
+    addNPC("Abigail", 176, 109, 204, 177, "嘿！你觉得今天我会赢下找彩蛋比赛吗？", "其实我觉得下雨天更适合出来逛。", "你怎么知道我饿了？！！");
+    addNPC("Shane", 25, 271, 54, 345, "……干嘛？别来烦我。", "给我来杯啤酒，不然我不想说话。", "有时我会意识到自己不过是一副柔弱的血肉之躯。");
     addNPC("Clint", 24, 355, 55, 435, "我的铁匠铺今天关门了。", "如果你有晶石，明天再拿来给我砸吧。", "你…你觉得艾米丽今天穿得好看吗？");
     addNPC("Gus", 99, 437, 130, 515, "欢迎！星之果实餐吧今天提供免费点心！", "看到大家吃得开心，我就满足了。", "锅里的汤还要再熬一会儿。");
     addNPC("Elliott", 61, 482, 90, 559, "这冬日的雪景，正是绝佳的写作素材。", "我的头发在风中凌乱了吗？", "来一杯红酒，致这美好的夜晚。");
@@ -85,18 +106,20 @@ void GameWindow::initNPCs() {
     addNPC("Emily", 285, 444, 323, 513, "我能感受到你散发着温暖的光环！", "这件衣服是我自己做的，好看吧？", "要和我一起跳舞吗？");
     addNPC("Haley", 324, 447, 357, 511, "哎呀，我的鞋子上沾到泥了。", "这种聚会真是太无聊了。", "如果你带了向日葵，我可能心情会好一点。");
     addNPC("George", 445, 492, 485, 555, "哼，想当年我可是能在雪地里跑一天的。", "音乐太吵了！", "艾芙琳做的饼干是这里唯一值得期待的。");
-    addNPC("Evelyn", 479, 494, 511, 562, "星露谷的冬星节总是这么温馨。", "来尝尝我做的饼干吧，孩子。", "看到你们年轻人精神这么好，真让人高兴。");
-    addNPC("Alex", 516, 441, 549, 512, "就算过节，我也不会停止锻炼的！", "嘿，等天气暖和了，我们来传球吧。", "总有一天我会成为职业橄榄球运动员。");
+    addNPC("Evelyn", 479, 494, 511, 562, "亲爱的，生命短暂，珍惜每一刻。", "来尝尝我做的饼干吧，孩子。", "看到你们年轻人精神这么好，真让人高兴。");
+    addNPC("Alex", 516, 441, 549, 512, "就算过节，我也不会停止锻炼的！", "难以置信夏天就这么结束了。", "总有一天我会成为职业橄榄球运动员。");
     addNPC("Jodi", 445, 319, 473, 387, "总算可以不用做家务，好好放松一下了。", "文森特又不知道跑去哪里野了。", "真希望肯特现在也能在这里……");
     addNPC("Sam", 595, 308, 621, 385, "刚才的音乐你听了吗？太酷了！", "我都快饿扁了，什么时候开饭？", "等会儿我要和塞巴斯蒂安去打台球。");
     addNPC("Vincent", 517, 249, 549, 286, "哥哥不带我玩！", "妈妈说吃太多糖牙齿会坏，可是我想吃！", "你看到那边大大的礼物盒了吗？");
     addNPC("Kent", 477, 223, 514, 283, "人太多了……让我有些不习惯。", "我还在努力适应这里平静的生活。", "爆竹的声音有时会让我回想起不好的事。");
     addNPC("Maru", 445, 65, 475, 133, "我在想能不能发明一个自动送礼物的机器。", "今晚的星星一定很漂亮。", "你对电子元件感兴趣吗？");
     addNPC("Demetrius", 595, 95, 621, 177, "从科学的角度来看，树上的灯光排列很有趣。", "我在观察冬星节人群的社交行为。", "不知道罗宾会不会喜欢我准备的礼物。");
-    addNPC("Robin", 516, 21, 553, 72, "这里的木质舞台搭建得真不错，很结实。", "需要升级农场建筑随时来找我！", "站久了还真有点冷呢。");
-    addNPC("Sebastian", 555, 15, 586, 73, "……人太多了，我想回房间打游戏。", "其实我更喜欢下雨天。", "等会儿山姆又要拉着我瞎逛了。");
+    addNPC("Robin", 516, 21, 553, 72, "这里的木质舞台搭建得真不错，很结实。", "需要升级农场建筑随时来找我！", "生活中简单的东西最棒了，就像一阵柔和的风");
+    addNPC("Sebastian", 555, 15, 586, 73, "……人太多了，我想回房间打游戏。", "其实我更喜欢下雨天。", "我想一个人出去闯荡，和我的摩托。");
 }
 
+
+//种植变化逻辑
 void GameWindow::gameTick() {
     timeTicks++;
     updateCrops();
@@ -119,10 +142,44 @@ void GameWindow::gameTick() {
 }
 
 void GameWindow::fastTick() {
+    // 全局基础动画时钟 (鸟和祝尼魔)
+    fastAnimTimer++;
+    if (fastAnimTimer >= 4) {
+        fastAnimTimer = 0;
+        fastAnimFrame = (fastAnimFrame + 1) % 4;
+    }
+
+    // 钓鱼界面宝箱开启帧动画
+    if (currentState == Fishing && fishState == FishResult && hasTreasure && treasureState >= 1 && treasureState <= 5) {
+        treasureTimer++;
+        if (treasureTimer > 3) {
+            treasureState++;
+            treasureTimer = 0;
+            if (treasureState == 6) {
+                if (treasureRewardType == 0) gold += treasureRewardAmount;
+                else if (treasureRewardType == 1) inventory.strawberrySeeds += treasureRewardAmount;
+                else inventory.sunflowerSeeds += treasureRewardAmount;
+            }
+        }
+    }
+
+    // 表情冒泡动画
+    if (currentState == Festival) {
+        if (emoteState >= 1 && emoteState <= 4) {
+            emoteTimer++;
+            if (emoteTimer >= 3) { emoteState++; emoteTimer = 0; }
+        } else if (emoteState == 5) {
+            emoteTimer++;
+            if (emoteTimer >= 45) { emoteState = 0; } // 停留1.5秒
+        }
+    }
+
     if (currentState == Combat) updateCombat();
     update();
 }
 
+
+//复活节彩蛋游戏
 void GameWindow::initEasterGame() {
     abigailClickCount = 0; easterEggsTotal = 12; easterEggsFound = 0; easterTimeLeft = 75; easterEnded = false; easterEggs.clear();
     auto rng = QRandomGenerator::global();
@@ -140,10 +197,12 @@ void GameWindow::updateEaster() {
     if (easterEggsFound >= easterEggsTotal) { easterEnded = true; }
 }
 
+
+//战斗界面设置
 void GameWindow::initCombat(bool nextLevel) {
     playerHp = 100;
     if (!nextLevel) combatLevel = 1;
-    maxEnemyHp = 100 + (combatLevel - 1) * 35; // 血量成长增加
+    maxEnemyHp = 100 + (combatLevel - 1) * 35;
     enemyHp = maxEnemyHp;
 
     combatNotes.clear();
@@ -153,45 +212,36 @@ void GameWindow::initCombat(bool nextLevel) {
     combatEnded = false;
 }
 
-// --- 【修改】双轨极致难度战斗更新 ---
 void GameWindow::updateCombat() {
     if (combatEnded) return;
     if (combatFeedbackTimer > 0) combatFeedbackTimer--;
 
-    // 音符速度大幅随难度提升
-    float speed = 8.0f + combatLevel * 3.0f;
+    float speed = 12.0f + combatLevel * 3.5f;
     for (int i = 0; i < combatNotes.size(); ++i) combatNotes[i].x -= speed;
 
-    // 漏掉音符检测（从后往前删，防止越界）
     for (int i = combatNotes.size() - 1; i >= 0; --i) {
         if (combatNotes[i].x < 50) {
-            combatNotes.removeAt(i);
-            playerHp -= 10;
-            combatFeedback = "MISS!";
-            combatFeedbackTimer = 20;
+            combatNotes.removeAt(i); playerHp -= 10; combatFeedback = "MISS!"; combatFeedbackTimer = 20;
         }
     }
 
     combatSpawnTimer--;
+    //战斗难度无限提升逻辑
     if (combatSpawnTimer <= 0) {
-        // --- 随机双轨生成机制 ---
         int rngVal = QRandomGenerator::global()->bounded(100);
-
-        // 等级越高，双轨齐发的概率越大
-        int doubleChance = qMin(50, 5 + combatLevel * 5);
+        int doubleChance = qMin(60, 10 + combatLevel * 8);
 
         if (rngVal < doubleChance) {
-            combatNotes.append(RhythmNote{ 640.0f, 0 }); // 轨0 (SPACE)
-            combatNotes.append(RhythmNote{ 640.0f, 1 }); // 轨1 (F)
+            combatNotes.append(RhythmNote{ 640.0f, 0 });
+            combatNotes.append(RhythmNote{ 640.0f, 1 });
         } else if (rngVal < 50 + doubleChance / 2) {
             combatNotes.append(RhythmNote{ 640.0f, 0 });
         } else {
             combatNotes.append(RhythmNote{ 640.0f, 1 });
         }
 
-        // 生成间隔也变得越来越短、越来越不规则
-        int minSpawn = qMax(8, 25 - combatLevel * 2);
-        int maxSpawn = qMax(15, 45 - combatLevel * 3);
+        int minSpawn = qMax(5, 20 - combatLevel * 2);
+        int maxSpawn = qMax(12, 35 - combatLevel * 3);
         combatSpawnTimer = QRandomGenerator::global()->bounded(minSpawn, maxSpawn);
     }
 
@@ -204,13 +254,14 @@ void GameWindow::updateCombat() {
 
     if (enemyHp <= 0 && !combatEnded) {
         enemyHp = 0; combatEnded = true;
-        int reward = 30 + combatLevel * 30; // 奖励递增
+        int reward = 10 + combatLevel * 10;
         gold += reward;
         globalMsg = QString("战斗胜利！获得 %1 G").arg(reward);
         globalMsgTimer = 15;
     }
 }
 
+//四季变换时的农田逻辑
 void GameWindow::updateCrops() {
     for (int r = 0; r < MAP_ROWS; ++r) {
         for (int c = 0; c < MAP_COLS; ++c) {
@@ -233,6 +284,7 @@ void GameWindow::updateCrops() {
     }
 }
 
+//钓鱼游戏
 void GameWindow::updateFishing() {
     auto rng = QRandomGenerator::global();
     if (fishState == FishWaiting) {
@@ -257,14 +309,31 @@ void GameWindow::updateFishing() {
 
         if (catchProgress >= 100) {
             fishState = FishResult;
-            caughtFishIndex = QRandomGenerator::global()->bounded(6);
+            caughtFishIndex = rng->bounded(6);
             inventory.fishes[caughtFishIndex]++;
+
+            //随机宝箱掉落判定 (50%概率)
+            if (rng->bounded(100) < 50) {
+                hasTreasure = true;
+                treasureState = 0;
+                treasureRewardType = rng->bounded(3); // 0=金币, 1=草莓种子, 2=向日葵种子
+                treasureRewardAmount = (treasureRewardType == 0) ? rng->bounded(50, 150) : rng->bounded(1, 4);
+            } else hasTreasure = false;
+
         }
-        if (catchProgress <= 0) { fishState = FishResult; caughtFishIndex = -1; }
+        if (catchProgress <= 0) { fishState = FishResult; caughtFishIndex = -1; hasTreasure = false; }
     }
 }
 
+//全局退出键设置
 void GameWindow::mousePressEvent(QMouseEvent *event) {
+    if (currentState != MainMenu && exitBtnRect.contains(event->pos())) {
+        if (currentState == Festival && inShop) inShop = false;
+        else if (currentState == Home && homeState != HomeNormal) homeState = HomeNormal;
+        else currentState = MainMenu;
+        return;
+    }
+
     if (currentState == MainMenu) {
         int mx = event->pos().x(); int my = event->pos().y();
         if (mx >= 220 && mx <= 420) {
@@ -273,7 +342,7 @@ void GameWindow::mousePressEvent(QMouseEvent *event) {
             else if (my >= 390 && my <= 440) currentState = Farm;
             else if (my >= 460 && my <= 510) { currentState = Fishing; fishState = FishIdle; currentDialogue = ""; }
             else if (my >= 530 && my <= 580) {
-                if (isInjured) { globalMsg = "你受伤了，必须先去节日广场找 Harvey 治疗！"; globalMsgTimer = 15; return; }
+                if (isInjured) { globalMsg = "你受伤了，快去找 Harvey 治疗！"; globalMsgTimer = 15; return; }
                 if (energy >= 10) { energy -= 10; currentState = Combat; initCombat(false); }
                 else { globalMsg = "体力不足！进战斗需要 10 体力！"; globalMsgTimer = 15; }
             }
@@ -291,8 +360,8 @@ void GameWindow::mousePressEvent(QMouseEvent *event) {
         QRect bedRect(517, 127, 103, 143);
 
         if (tableRect.contains(event->pos())) {
-            int earned = (inventory.strawberryHarvested * 20) + (inventory.sunflowerHarvested * 10);
-            for(int i=0; i<6; i++) { earned += inventory.fishes[i] * 30; inventory.fishes[i] = 0; }
+            int earned = (inventory.strawberryHarvested * 20) + (inventory.sunflowerHarvested * 15);
+            for(int i=0; i<6; i++) { earned += inventory.fishes[i] * 20; inventory.fishes[i] = 0; }
             inventory.strawberryHarvested = 0; inventory.sunflowerHarvested = 0;
             if (earned > 0) {
                 gold += earned;
@@ -304,22 +373,32 @@ void GameWindow::mousePressEvent(QMouseEvent *event) {
         }
         else if (bedRect.contains(event->pos())) {
             energy = maxEnergy;
-            globalMsg = "睡了个好觉，体力回满了！";
+            globalMsg = "没有早八，睡了个好觉，体力拉满了！";
             globalMsgTimer = 15;
         }
         else if (tvRect.contains(event->pos())) {
             homeState = HomeTVPrompt;
         }
     }
+
+    //节日界面点击区域判定
     else if (currentState == Festival) {
         if (inShop) return;
+
+        QRect emoteRect(285, 55, 72, 45);
+        if (emoteRect.contains(event->pos()) && emoteState == 0) {
+            emoteState = 1;
+            emoteTimer = 0;
+            emoteId = QRandomGenerator::global()->bounded(15);
+            return;
+        }
 
         for (int i = 0; i < npcList.size(); ++i) {
             const NPC &npc = npcList[i];
             if (npc.clickArea.contains(event->pos())) {
                 if (isInjured && npc.name.contains("Harvey")) {
                     harveyClickCount++;
-                    if (harveyClickCount >= 3) {
+                    if (harveyClickCount >= 2) {
                         if (gold >= 50) {
                             gold -= 50; isInjured = false; harveyClickCount = 0;
                             globalMsg = "治疗成功！花费了 50 G。"; globalMsgTimer = 15;
@@ -328,7 +407,7 @@ void GameWindow::mousePressEvent(QMouseEvent *event) {
                             currentDialogue = npc.name + ":\n抱歉，你需要支付 50 G 才能进行治疗，去卖点东西吧。";
                         }
                     } else {
-                        currentDialogue = npc.name + ":\n你看起来受伤了？需要帮忙的话多跟我说几次。";
+                        currentDialogue = npc.name + ":\n你看起来受伤了？请让我来帮帮忙吧。";
                     }
                     dialogueTimer = 25; return;
                 }
@@ -358,9 +437,16 @@ void GameWindow::mousePressEvent(QMouseEvent *event) {
             }
         }
     }
-    else if (currentState == Fishing && fishState == FishResult) { fishState = FishIdle; }
+    else if (currentState == Fishing && fishState == FishResult) {
+        if (hasTreasure && treasureState == 0) {
+            treasureState = 1;
+        } else if (!hasTreasure || treasureState >= 6) {
+            fishState = FishIdle;
+        }
+    }
 }
 
+//主菜单程序界面
 void GameWindow::keyPressEvent(QKeyEvent *event) {
     if (event->key() == Qt::Key_Escape && currentState != MainMenu) {
         if (currentState == Festival && inShop) { inShop = false; return; }
@@ -371,9 +457,7 @@ void GameWindow::keyPressEvent(QKeyEvent *event) {
     if (currentState == Home && homeState == HomeTVPrompt) {
         if (event->key() == Qt::Key_Y) {
             if (gold >= 100) {
-                gold -= 100;
-                blindBoxIndex = QRandomGenerator::global()->bounded(6);
-                homeState = HomeTVShow;
+                gold -= 100; blindBoxIndex = QRandomGenerator::global()->bounded(6); homeState = HomeTVShow;
             } else { globalMsg = "金币不足！"; globalMsgTimer = 15; homeState = HomeNormal; }
         } else if (event->key() == Qt::Key_N) { homeState = HomeNormal; }
         return;
@@ -381,10 +465,10 @@ void GameWindow::keyPressEvent(QKeyEvent *event) {
 
     if (currentState == Festival && inShop) {
         if (event->key() == Qt::Key_1) {
-            if (gold >= 10) { gold -= 10; inventory.strawberrySeeds++; globalMsg = "购买草莓种子成功！"; globalMsgTimer=10; }
+            if (gold >= 20) { gold -= 20; inventory.strawberrySeeds++; globalMsg = "购买草莓种子成功！"; globalMsgTimer=10; }
             else { globalMsg = "金币不足！"; globalMsgTimer=10; }
         } else if (event->key() == Qt::Key_2) {
-            if (gold >= 20) { gold -= 20; inventory.sunflowerSeeds++; globalMsg = "购买向日葵种子成功！"; globalMsgTimer=10; }
+            if (gold >= 10) { gold -= 10; inventory.sunflowerSeeds++; globalMsg = "购买向日葵种子成功！"; globalMsgTimer=10; }
             else { globalMsg = "金币不足！"; globalMsgTimer=10; }
         }
         return;
@@ -412,10 +496,12 @@ void GameWindow::keyPressEvent(QKeyEvent *event) {
                 } else { globalMsg = "体力不够了..."; globalMsgTimer = 15; }
             } else if (fishState == FishBiting) {
                 fishState = FishPlaying; barY = 150; barVy = 0; fishY = 150; fishTarget = 150; catchProgress = 30;
-            } else if (fishState == FishResult) { fishState = FishIdle; }
+            } else if (fishState == FishResult) {
+                if (hasTreasure && treasureState == 0) treasureState = 1;
+                else if (!hasTreasure || treasureState >= 6) fishState = FishIdle;
+            }
         }
     }
-    // --- 【修改】双按键打击逻辑 ---
     else if (currentState == Combat) {
         if (combatEnded) {
             if (enemyHp <= 0) {
@@ -427,25 +513,20 @@ void GameWindow::keyPressEvent(QKeyEvent *event) {
             return;
         }
 
-        // 提取统一的打击判定函数
         auto processHit = [&](int targetType) {
             bool hit = false;
             for (int i = 0; i < combatNotes.size(); ++i) {
-                if (combatNotes[i].type != targetType) continue; // 只判定对应轨道的音符
-
+                if (combatNotes[i].type != targetType) continue;
                 float diff = std::abs(combatNotes[i].x - 150.0f);
-                if (diff <= 30.0f) {
-                    combatFeedback = "PERFECT!!"; enemyHp -= 15; combatNotes.removeAt(i); hit = true; break;
-                } else if (diff <= 65.0f) {
-                    combatFeedback = "GOOD!"; enemyHp -= 5; combatNotes.removeAt(i); hit = true; break;
-                }
+                if (diff <= 30.0f) { combatFeedback = "PERFECT!!"; enemyHp -= 15; combatNotes.removeAt(i); hit = true; break; }
+                else if (diff <= 65.0f) { combatFeedback = "GOOD!"; enemyHp -= 5; combatNotes.removeAt(i); hit = true; break; }
             }
             if (!hit) { combatFeedback = "MISS!"; playerHp -= 5; }
             combatFeedbackTimer = 15;
         };
 
-        if (event->key() == Qt::Key_Space) { processHit(0); } // 下轨 SPACE
-        else if (event->key() == Qt::Key_F) { processHit(1); } // 上轨 F 键
+        if (event->key() == Qt::Key_Space) { processHit(0); }
+        else if (event->key() == Qt::Key_F) { processHit(1); }
     }
     else if (currentState == Easter) {
         if (easterEnded && event->key() == Qt::Key_Space) currentState = Festival;
@@ -462,6 +543,7 @@ void GameWindow::keyReleaseEvent(QKeyEvent *event) {
     }
 }
 
+//农田劳作逻辑与随机挖出种子等设置
 void GameWindow::handleFarmAction() {
     int tx = player.x; int ty = player.y;
     if (player.dir == Up) ty--; else if (player.dir == Down) ty++; else if (player.dir == Left) tx--; else if (player.dir == Right) tx++;
@@ -475,7 +557,7 @@ void GameWindow::handleFarmAction() {
     if (!t.isPlowed) {
         t.isPlowed = true;
         int rng = QRandomGenerator::global()->bounded(100);
-        if (rng < 10) inventory.strawberrySeeds++; else if (rng < 35) inventory.sunflowerSeeds++;
+        if (rng < 2) inventory.strawberrySeeds++; else if (rng < 8) inventory.sunflowerSeeds++;
     } else {
         if (t.crop != None && t.stage == Fruiting) {
             isHarvesting = true; harvestAnimTimer = 2;
@@ -491,30 +573,32 @@ void GameWindow::handleFarmAction() {
     }
 }
 
+void GameWindow::drawTextbox(QPainter &painter, int x, int y, int w, int h, QString text) {
+    if (!img_textbox.isNull()) painter.drawPixmap(x, y, w, h, img_textbox);
+    else { painter.setBrush(QColor(255, 240, 200)); painter.drawRect(x, y, w, h); }
+    painter.setPen(QColor(60, 40, 20));
+    QFont f("Comic Sans MS", 12, QFont::Bold); painter.setFont(f);
+    painter.drawText(QRect(x+10, y+5, w-20, h-10), Qt::AlignCenter | Qt::TextWordWrap, text);
+}
+
 void GameWindow::paintEvent(QPaintEvent *event) {
     Q_UNUSED(event);
     QPainter painter(this);
 
-    auto drawHint =[&]() {
-        QFont f("Comic Sans MS", 14, QFont::Bold); painter.setFont(f);
-        painter.setPen(QColor(0, 0, 0, 200));
-        painter.drawText(12, 22, "Press 'ESC' to return to Main Menu");
-        painter.setPen(QColor(255, 220, 50));
-        painter.drawText(10, 20, "Press 'ESC' to return to Main Menu");
-    };
-
     if (currentState == MainMenu) drawMainMenu(painter);
-    else if (currentState == Home) { drawHome(painter); drawHint(); drawGlobalHUD(painter); }
-    else if (currentState == Festival) { drawFestival(painter); drawHint(); drawGlobalHUD(painter); }
-    else if (currentState == Farm) { drawFarm(painter); drawHint(); drawGlobalHUD(painter); }
-    else if (currentState == Fishing) { drawFishing(painter); drawHint(); drawGlobalHUD(painter); }
-    else if (currentState == Combat) { drawCombat(painter); drawHint(); }
-    else if (currentState == Easter) { drawEaster(painter); drawHint(); }
+    else if (currentState == Home) { drawHome(painter); drawGlobalHUD(painter); }
+    else if (currentState == Festival) { drawFestival(painter); drawGlobalHUD(painter); }
+    else if (currentState == Farm) { drawFarm(painter); drawGlobalHUD(painter); }
+    else if (currentState == Fishing) { drawFishing(painter); drawGlobalHUD(painter); }
+    else if (currentState == Combat) { drawCombat(painter); }
+    else if (currentState == Easter) { drawEaster(painter); }
+
+    if (currentState != MainMenu && !img_exit.isNull()) {
+        painter.drawPixmap(exitBtnRect, img_exit);
+    }
 
     if (globalMsgTimer > 0) {
-        painter.setPen(Qt::yellow);
-        QFont f("Comic Sans MS", 18, QFont::Bold); painter.setFont(f);
-        painter.drawText(QRect(0, 550, 640, 50), Qt::AlignCenter, globalMsg);
+        drawTextbox(painter, 120, 520, 400, 60, globalMsg);
     }
 }
 
@@ -524,10 +608,8 @@ void GameWindow::drawGlobalHUD(QPainter &painter) {
     painter.drawRect(450, 10, 180, isInjured ? 100 : 70);
 
     QFont f("Comic Sans MS", 14, QFont::Bold); painter.setFont(f);
-
     painter.setPen(QColor(255, 215, 0));
     painter.drawText(460, 35, QString("Gold: %1 G").arg(gold));
-
     painter.setPen(Qt::white);
     painter.drawText(460, 65, "Energy: ");
 
@@ -536,18 +618,19 @@ void GameWindow::drawGlobalHUD(QPainter &painter) {
     painter.setBrush((energy > 20) ? Qt::green : Qt::red);
     painter.drawRect(460 + 60, 53, qMax(0, eWidth), 12);
 
-    if (isInjured) {
-        painter.setPen(Qt::red);
-        painter.drawText(460, 95, "Status: INJURED!!");
-    }
+    if (isInjured) { painter.setPen(Qt::red); painter.drawText(460, 95, "Status: INJURED!!"); }
 }
 
+//主页动画设置
 void GameWindow::drawMainMenu(QPainter &painter) {
     if(!img_titleBg.isNull()) painter.drawPixmap(0, 0, img_titleBg);
     else painter.fillRect(rect(), QColor(50, 80, 120));
 
-    QFont f("Comic Sans MS", 22, QFont::Black); painter.setFont(f);
+    if (!img_bird[fastAnimFrame].isNull()) painter.drawPixmap(100, 20, img_bird[fastAnimFrame]);
+    if (!img_junimo[fastAnimFrame].isNull()) painter.drawPixmap(150, 500, img_junimo[fastAnimFrame]);
+    if (!img_junimo[(fastAnimFrame+2)%4].isNull()) painter.drawPixmap(450, 500, img_junimo[(fastAnimFrame+2)%4]);
 
+    QFont f("Comic Sans MS", 22, QFont::Black); painter.setFont(f);
     QString menus[5] = {"Go Home", "Town Festival", "Farm", "River (Fishing)", "Combat"};
     for(int i=0; i<5; i++) {
         QRect btn(220, 250 + i*70, 200, 50);
@@ -556,6 +639,8 @@ void GameWindow::drawMainMenu(QPainter &painter) {
     }
 }
 
+
+//回家界面点击逻辑判断
 void GameWindow::drawHome(QPainter &painter) {
     if (homeState == HomeTVShow) {
         if(!img_homeVariants[blindBoxIndex].isNull()) painter.drawPixmap(0, 0, img_homeVariants[blindBoxIndex]);
@@ -567,6 +652,8 @@ void GameWindow::drawHome(QPainter &painter) {
         painter.setPen(QColor(60, 40, 20)); QFont f("Comic Sans MS", 15, QFont::Bold); painter.setFont(f);
         painter.drawText(envRect.adjusted(50, 40, -50, -40), Qt::AlignCenter | Qt::TextWordWrap, homeMessages[blindBoxIndex]);
 
+        painter.setPen(Qt::white); f.setPointSize(12); painter.setFont(f);
+        painter.drawText(QRect(0, 600, 640, 30), Qt::AlignCenter, "-- 点击屏幕中心区域即可返回 --");
     } else {
         if(!img_homeBg.isNull()) painter.drawPixmap(0, 0, img_homeBg);
         else painter.fillRect(rect(), Qt::darkGray);
@@ -577,7 +664,7 @@ void GameWindow::drawHome(QPainter &painter) {
             else { painter.setBrush(QColor(255, 240, 200)); painter.drawRect(envRect); }
             painter.setPen(QColor(60, 40, 20)); QFont f("Comic Sans MS", 15, QFont::Bold); painter.setFont(f);
             painter.drawText(envRect.adjusted(50, 40, -50, -40), Qt::AlignCenter | Qt::TextWordWrap,
-                             "要花费 100 G 抽取一次房屋盲盒吗？\n\n[按 Y 确认]    [按 N 取消]");
+                             "要花费 100 G 抽取一次房屋风格盲盒吗？\n\n[按 Y 确认][按 N 取消]");
         }
     }
 }
@@ -586,6 +673,15 @@ void GameWindow::drawFestival(QPainter &painter) {
     if(!img_feastBg.isNull()) painter.drawPixmap(0, 0, img_feastBg);
     else painter.fillRect(rect(), Qt::darkGreen);
 
+    drawTextbox(painter, 130, 60, 160, 40, "你想挑衅她？");
+    drawTextbox(painter, 360, 40, 160, 40, "可爱的星星：-）");
+
+    if (emoteState >= 1 && emoteState <= 4 && !img_emoAnim[emoteState-1].isNull()) {
+        painter.drawPixmap(305, 20, img_emoAnim[emoteState-1]);
+    } else if (emoteState == 5 && !img_emos[emoteId].isNull()) {
+        painter.drawPixmap(305, 20, img_emos[emoteId]);
+    }
+
     if (inShop) {
         QRect envRect(100, 150, 440, 300);
         if (!img_envelope.isNull()) painter.drawPixmap(envRect, img_envelope);
@@ -593,13 +689,11 @@ void GameWindow::drawFestival(QPainter &painter) {
 
         painter.setPen(QColor(60, 40, 20));
         QFont f("Comic Sans MS", 16, QFont::Bold); painter.setFont(f);
-        painter.drawText(QRect(100, 200, 440, 50), Qt::AlignCenter, "—— 皮埃尔神秘商店 ——");
+        painter.drawText(QRect(100, 200, 440, 50), Qt::AlignCenter, "—— 皮埃尔的种子商店 ——");
 
         f.setPointSize(14); painter.setFont(f);
-        painter.drawText(QRect(150, 280, 340, 30), Qt::AlignLeft, "按 1 购买 : 草莓种子 (10 G)");
-        painter.drawText(QRect(150, 320, 340, 30), Qt::AlignLeft, "按 2 购买 : 向日葵种子 (20 G)");
-
-        painter.setPen(Qt::darkGray); painter.drawText(QRect(100, 400, 440, 30), Qt::AlignCenter, "按 ESC 离开商店");
+        painter.drawText(QRect(150, 280, 340, 30), Qt::AlignLeft, "按 1 购买 : 草莓种子 (20 G)");
+        painter.drawText(QRect(150, 320, 340, 30), Qt::AlignLeft, "按 2 购买 : 向日葵种子 (10 G)");
     }
     else if (dialogueTimer > 0 && !currentDialogue.isEmpty()) {
         QRect envRect(100, 420, 440, 200);
@@ -610,6 +704,8 @@ void GameWindow::drawFestival(QPainter &painter) {
     }
 }
 
+
+//农场绘制
 void GameWindow::drawFarm(QPainter &painter) {
     QPixmap *currentBg = &img_bgWinter;
     QColor fallbackColor = QColor(200, 200, 220);
@@ -669,6 +765,7 @@ void GameWindow::drawFarm(QPainter &painter) {
     painter.setBrush(Qt::white); painter.drawRect(10, 180, timeTicks, 10);
 }
 
+//钓鱼游戏设计
 void GameWindow::drawFishing(QPainter &painter) {
     if(!img_riverBg.isNull()) painter.drawPixmap(0, 0, img_riverBg);
     else painter.fillRect(rect(), QColor(50, 150, 200));
@@ -693,33 +790,54 @@ void GameWindow::drawFishing(QPainter &painter) {
     else if (fishState == FishResult) {
         painter.setBrush(QColor(0,0,0,150)); painter.drawRect(rect());
         if (caughtFishIndex != -1) {
-            if (!img_fishes[caughtFishIndex].isNull()) painter.drawPixmap(320 - 48, 200, img_fishes[caughtFishIndex]);
+            if (!img_fishes[caughtFishIndex].isNull()) painter.drawPixmap(200, 180, img_fishes[caughtFishIndex]);
             painter.setPen(Qt::yellow); f.setPointSize(26); painter.setFont(f);
             painter.drawText(QRect(0, 120, 640, 50), Qt::AlignCenter, "CATCH!");
+
+            if (hasTreasure) {
+                int bx = 380; int by = 200;
+                if (treasureState == 0 && !img_boxClosed.isNull()) painter.drawPixmap(bx, by, img_boxClosed);
+                else if (treasureState >= 1 && treasureState <= 5 && !img_boxOpen[treasureState-1].isNull()) painter.drawPixmap(bx, by, img_boxOpen[treasureState-1]);
+                else if (treasureState >= 6 && !img_boxOpen[4].isNull()) {
+                    painter.drawPixmap(bx, by, img_boxOpen[4]);
+                    QString rewText;
+                    if (treasureRewardType == 0) rewText = QString("金币 +%1").arg(treasureRewardAmount);
+                    else if (treasureRewardType == 1) rewText = QString("草莓种子 +%1").arg(treasureRewardAmount);
+                    else rewText = QString("向日葵种子 +%1").arg(treasureRewardAmount);
+                    drawTextbox(painter, bx - 60, by + 80, 180, 40, rewText);
+                }
+            }
 
             QRect envRect(100, 420, 440, 200);
             if (!img_envelope.isNull()) painter.drawPixmap(envRect, img_envelope);
             else { painter.setBrush(QColor(255, 240, 200)); painter.drawRect(envRect); }
             painter.setPen(QColor(60, 40, 20)); f.setPointSize(16); painter.setFont(f);
-            QString customText = QString("太棒了！你钓上了一条\n【%1】 ！！").arg(fishNames[caughtFishIndex]);
+
+            QString clickHint = (hasTreasure && treasureState == 0) ? "\n(点击拆开宝箱!)" : "";
+            QString customText = QString("太棒了！你钓上了一条\n【%1】 ！！%2").arg(fishNames[caughtFishIndex]).arg(clickHint);
             painter.drawText(envRect.adjusted(40, 50, -40, -50), Qt::AlignCenter | Qt::TextWordWrap, customText);
+
         } else {
             QRect envRect(100, 420, 440, 200);
             if (!img_envelope.isNull()) painter.drawPixmap(envRect, img_envelope);
             else { painter.setBrush(QColor(255, 240, 200)); painter.drawRect(envRect); }
+
             painter.setPen(QColor(60, 40, 20)); f.setPointSize(18); painter.setFont(f);
-            painter.drawText(envRect, Qt::AlignCenter, "哎呀，鱼逃跑了...");
+            painter.drawText(envRect, Qt::AlignCenter, "这都不行？Loser。");
         }
         f.setPointSize(12); painter.setFont(f); painter.setPen(Qt::lightGray);
         painter.drawText(QRect(0, 600, 640, 40), Qt::AlignCenter, "-- 按 空格键 或 鼠标点击 继续 --");
     }
 }
 
-// --- 【修改】重制后的双轨音游渲染 ---
+//战斗背景绘制
 void GameWindow::drawCombat(QPainter &painter) {
-    painter.fillRect(rect(), Qt::black);
+    if (!img_combatBg.isNull()) painter.drawPixmap(0, 0, img_combatBg);
+    else painter.fillRect(rect(), Qt::black);
+
     QFont f("Comic Sans MS", 16, QFont::Bold); painter.setFont(f);
 
+    painter.setPen(QColor(0,0,0,200)); painter.drawText(12, 42, QString("LEVEL: %1").arg(combatLevel));
     painter.setPen(Qt::white); painter.drawText(10, 40, QString("LEVEL: %1").arg(combatLevel));
 
     int enemyX = 480; int enemyY = 100;
@@ -731,6 +849,7 @@ void GameWindow::drawCombat(QPainter &painter) {
     else { painter.setBrush(Qt::blue); painter.drawRect(pX, pY, 64, 128); }
 
     auto drawBar = [&](int x, int y, int hp, int maxH, QColor color, QString name) {
+        painter.setPen(QColor(0,0,0,200)); painter.drawText(x+2, y-8, name);
         painter.setPen(Qt::white); painter.drawText(x, y - 10, name);
         painter.setBrush(Qt::darkGray); painter.drawRect(x, y, 100, 15);
         int barW = (int)((float)qMax(0, hp) / maxH * 100);
@@ -739,30 +858,25 @@ void GameWindow::drawCombat(QPainter &painter) {
     drawBar(50, 80, playerHp, 100, Qt::green, "Player HP");
     drawBar(480, 80, enemyHp, maxEnemyHp, Qt::red, "Enemy HP");
 
-    // 上轨道 (F键)
     int track1Y = 340;
-    painter.setPen(QPen(Qt::darkGray, 5)); painter.drawLine(0, track1Y + 16, 640, track1Y + 16);
-    painter.setPen(QPen(QColor(255, 100, 100), 3)); painter.setBrush(Qt::transparent);
+    painter.setPen(QPen(Qt::white, 5)); painter.drawLine(0, track1Y + 16, 640, track1Y + 16);
+    painter.setPen(QPen(QColor(255, 200, 100), 4)); painter.setBrush(Qt::transparent);
     painter.drawEllipse(150 - 16, track1Y, 32, 32);
-    painter.drawText(150 - 25, track1Y + 50, "[ F ]");
+    painter.setPen(Qt::black); painter.drawText(150 - 23, track1Y + 52, "[ F ]");
+    painter.setPen(Qt::white); painter.drawText(150 - 25, track1Y + 50, "[ F ]");
 
-    // 下轨道 (SPACE键)
     int track2Y = 430;
-    painter.setPen(QPen(Qt::darkGray, 5)); painter.drawLine(0, track2Y + 16, 640, track2Y + 16);
-    painter.setPen(QPen(QColor(100, 200, 255), 3)); painter.setBrush(Qt::transparent);
+    painter.setPen(QPen(Qt::white, 5)); painter.drawLine(0, track2Y + 16, 640, track2Y + 16);
+    painter.setPen(QPen(QColor(100, 200, 255), 4)); painter.setBrush(Qt::transparent);
     painter.drawEllipse(150 - 16, track2Y, 32, 32);
-    painter.drawText(150 - 45, track2Y + 50, "[SPACE]");
+    painter.setPen(Qt::black); painter.drawText(150 - 43, track2Y + 52, "[SPACE]");
+    painter.setPen(Qt::white); painter.drawText(150 - 45, track2Y + 50, "[SPACE]");
 
-    // 画音符
     for (int i = 0; i < combatNotes.size(); ++i) {
         const RhythmNote &note = combatNotes[i];
-        int nY = (note.type == 1) ? track1Y : track2Y; // type1走上轨, type0走下轨
-        if (!img_note.isNull()) {
-            painter.drawPixmap(note.x - 16, nY, img_note);
-        } else {
-            painter.setBrush((note.type == 1) ? Qt::red : Qt::cyan);
-            painter.drawEllipse(note.x - 10, nY + 6, 20, 20);
-        }
+        int nY = (note.type == 1) ? track1Y : track2Y;
+        if (!img_note.isNull()) painter.drawPixmap(note.x - 16, nY, img_note);
+        else { painter.setBrush((note.type == 1) ? Qt::red : Qt::cyan); painter.drawEllipse(note.x - 10, nY + 6, 20, 20); }
     }
 
     if (combatFeedbackTimer > 0) {
@@ -788,6 +902,7 @@ void GameWindow::drawCombat(QPainter &painter) {
     }
 }
 
+//复活节彩蛋游戏设计
 void GameWindow::drawEaster(QPainter &painter) {
     if(!img_easterBg.isNull()) painter.drawPixmap(0, 0, img_easterBg);
     else painter.fillRect(rect(), Qt::darkGreen);
