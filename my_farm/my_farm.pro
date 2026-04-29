@@ -13,6 +13,7 @@ DISTFILES += \
     images/bg_spring.png \
     images/bg_summer.png \
     images/bg_winter.png \
+    images/letter_bg.png \
     images/player_down.png \
     images/player_down_1.png \
     images/player_down_2.png \
