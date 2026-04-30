@@ -91,5 +91,38 @@
         <file>images/junimo_3.png</file>
         <file>images/junimo_4.png</file>
         <file>images/textbox.png</file>
+        <file>images/cat_curl1.png</file>
+        <file>images/cat_curl2.png</file>
+        <file>images/cat_down1.png</file>
+        <file>images/cat_down2.png</file>
+        <file>images/cat_down3.png</file>
+        <file>images/cat_down4.png</file>
+        <file>images/cat_jump1.png</file>
+        <file>images/cat_jump2.png</file>
+        <file>images/cat_left1.png</file>
+        <file>images/cat_left2.png</file>
+        <file>images/cat_left3.png</file>
+        <file>images/cat_left4.png</file>
+        <file>images/cat_lick1.png</file>
+        <file>images/cat_lick2.png</file>
+        <file>images/cat_lick3.png</file>
+        <file>images/cat_lick4.png</file>
+        <file>images/cat_lie1.png</file>
+        <file>images/cat_lie2.png</file>
+        <file>images/cat_lie3.png</file>
+        <file>images/cat_lie4.png</file>
+        <file>images/cat_right1.png</file>
+        <file>images/cat_right2.png</file>
+        <file>images/cat_right3.png</file>
+        <file>images/cat_right4.png</file>
+        <file>images/cat_sit1.png</file>
+        <file>images/cat_sit2.png</file>
+        <file>images/cat_sit3.png</file>
+        <file>images/cat_sit4.png</file>
+        <file>images/cat_up1.png</file>
+        <file>images/cat_up2.png</file>
+        <file>images/cat_up3.png</file>
+        <file>images/cat_up4.png</file>
+        <file>images/sticker.png</file>
     </qresource>
 </RCC>
