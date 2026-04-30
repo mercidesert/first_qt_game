@@ -1,6 +1,8 @@
 #include "GameWindow.h"
 #include "Scenes.h"
 #include <QPainter>
+#include <QMediaPlayer>
+#include <QAudioOutput>
 
 GameWindow::GameWindow(QWidget *parent) : QWidget(parent), currentState(MainMenu) {
     setFixedSize(640, 640);
@@ -19,12 +21,32 @@ GameWindow::GameWindow(QWidget *parent) : QWidget(parent), currentState(MainMenu
     scenes[Combat] = new SceneCombat(this);
     scenes[Easter] = new SceneEaster(this);
 
-    timer = new QTimer(this); connect(timer, &QTimer::timeout, this, &GameWindow::gameTick); timer->start(200);
-    fastTimer = new QTimer(this); connect(fastTimer, &QTimer::timeout, this, &GameWindow::fastTick); fastTimer->start(33);
+    timer = new QTimer(this);
+    connect(timer, &QTimer::timeout, this, &GameWindow::gameTick);
+    timer->start(200);
+
+    fastTimer = new QTimer(this);
+    connect(fastTimer, &QTimer::timeout, this, &GameWindow::fastTick);
+    fastTimer->start(33);
+
+    // ========== 背景音乐 (Qt 6) ==========
+    bgmPlayer = new QMediaPlayer(this);
+    audioOutput = new QAudioOutput(this);
+
+    audioOutput->setVolume(0.5);  // 音量 50%
+    bgmPlayer->setAudioOutput(audioOutput);
+    bgmPlayer->setSource(QUrl("qrc:/images/bgm.mp3"));  // 确认路径正确
+    bgmPlayer->setLoops(QMediaPlayer::Infinite);  // 无限循环
+    bgmPlayer->play();
 }
 
 GameWindow::~GameWindow() {
     for (int i = 0; i < 7; ++i) delete scenes[i];
+
+    // 清理音乐资源（可选，Qt 会自动清理）
+    if (bgmPlayer) {
+        bgmPlayer->stop();
+    }
 }
 //初始化所有游戏窗口与子系统
 void GameWindow::changeScene(int stateIndex) {

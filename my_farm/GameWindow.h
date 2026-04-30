@@ -1,6 +1,9 @@
 #ifndef GAMEWINDOW_H
 #define GAMEWINDOW_H
 
+#include <QMediaPlayer>
+#include <QAudioOutput>  // Qt 6 替代 QMediaPlaylist
+
 #include <QWidget>
 #include <QTimer>
 #include <QRect>
@@ -11,7 +14,6 @@ class GameWindow : public QWidget {
 public:
     GameWindow(QWidget *parent = nullptr);
     ~GameWindow();
-
 
     void changeScene(int stateIndex);
 
@@ -35,7 +37,10 @@ private:
     QTimer *timer;
     QTimer *fastTimer;
     QRect exitBtnRect;
+
+    // Qt 6 写法
+    QMediaPlayer *bgmPlayer;
+    QAudioOutput *audioOutput;  // 替代 playlist
 };
 
 #endif
-//游戏主窗口类，管理场景切换、刷新计时器、处理用户输入和绘制全局HUD界面

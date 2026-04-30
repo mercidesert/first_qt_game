@@ -124,5 +124,6 @@
         <file>images/cat_up3.png</file>
         <file>images/cat_up4.png</file>
         <file>images/sticker.png</file>
+        <file>images/bgm.mp3</file>
     </qresource>
 </RCC>
