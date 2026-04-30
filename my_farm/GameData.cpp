@@ -20,7 +20,7 @@ GameData::GameData() {
     homeMessages[5] = "走向冬天，唱一支歌吧。不祝福，也不祈祷";
     initNPCs();
 }
-
+//单例获取构造初始化
 void GameData::initNPCs() {
     auto addNPC = [&](QString name, int x1, int y1, int x2, int y2, QString msg1, QString msg2, QString msg3) {
         NPC npc; npc.name = name; npc.clickArea = QRect(x1, y1, x2 - x1, y2 - y1); npc.dialogues << msg1 << msg2 << msg3; npcList.append(npc);
@@ -49,3 +49,4 @@ void GameData::initNPCs() {
     addNPC("Robin", 516, 21, 553, 72, "这里的木质舞台搭建得真不错，很结实。", "需要升级农场建筑随时来找我！", "生活中简单的东西最棒了，就像一阵柔和的风");
     addNPC("Sebastian", 555, 15, 586, 73, "……人太多了，我想回房间打游戏。", "其实我更喜欢下雨天。", "我想一个人出去闯荡，和我的摩托。");
 }
+//NPC随机语句设置初始化，点击方位确定

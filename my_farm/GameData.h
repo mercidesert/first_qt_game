@@ -2,13 +2,13 @@
 #define GAMEDATA_H
 
 #include <QString>
-#include <QList>      // <--- 核心修复：之前漏掉了这个容器头文件！
+#include <QList>
 #include "GlobalConfig.h"
 #include "FarmCat.h"
 
 class GameData {
 public:
-    static GameData& instance(); // 单例入口
+    static GameData& instance();
 
     int gold;
     int energy, maxEnergy;
@@ -33,4 +33,5 @@ private:
     void initNPCs();
 };
 
-#endif // GAMEDATA_H
+#endif
+//单例定义了全局游戏数据管理中心，集中存储玩家属性、地图、背包、npc等所有游戏状态数据

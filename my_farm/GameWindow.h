@@ -3,7 +3,7 @@
 
 #include <QWidget>
 #include <QTimer>
-#include <QRect>      // 补充 QRect 头文件
+#include <QRect>
 #include "IScene.h"
 
 class GameWindow : public QWidget {
@@ -12,7 +12,7 @@ public:
     GameWindow(QWidget *parent = nullptr);
     ~GameWindow();
 
-    // 控制场景切换的接口
+
     void changeScene(int stateIndex);
 
 protected:
@@ -30,11 +30,12 @@ private:
     void drawTextbox(QPainter &painter, int x, int y, int w, int h, QString text);
 
     int currentState;
-    IScene* scenes[7]; // 存放7个独立场景的多态指针
+    IScene* scenes[7];
 
     QTimer *timer;
     QTimer *fastTimer;
     QRect exitBtnRect;
 };
 
-#endif // GAMEWINDOW_H
+#endif
+//游戏主窗口类，管理场景切换、刷新计时器、处理用户输入和绘制全局HUD界面

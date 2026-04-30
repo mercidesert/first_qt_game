@@ -1,13 +1,12 @@
 #include "Scenes.h"
 #include <QRandomGenerator>
 
-// ============== Main Menu ==============
-// ============== Main Menu ==============
+
+
 void SceneMainMenu::fastTick() {
     fastAnimTimer++;
     if (fastAnimTimer >= 4) { fastAnimTimer = 0; fastAnimFrame = (fastAnimFrame + 1) % 4; }
 
-    // 改为从右向左飞（鸟头朝左，这样就是朝前飞）
     birdX -= 2.0f;
     if (birdX < -64.0f) birdX = 640.0f;
 }
@@ -16,7 +15,6 @@ void SceneMainMenu::draw(QPainter &painter) {
     ResourceManager& r = ResourceManager::instance();
     if(!r.titleBg.isNull()) painter.drawPixmap(0, 0, r.titleBg); else painter.fillRect(window->rect(), QColor(50, 80, 120));
 
-    // 【修改】去除了镜像代码，直接正常画出小鸟
     if (!r.bird[fastAnimFrame].isNull()) painter.drawPixmap((int)birdX, 20, r.bird[fastAnimFrame]);
 
     if (!r.junimo[fastAnimFrame].isNull()) painter.drawPixmap(150, 500, r.junimo[fastAnimFrame]);
@@ -30,6 +28,7 @@ void SceneMainMenu::draw(QPainter &painter) {
         painter.setPen(QColor(255, 245, 220)); painter.drawText(btn, Qt::AlignCenter, menus[i]);
     }
 }
+//首页绘制，加载祝尼魔、飞鸟动画与各子标题
 void SceneMainMenu::mousePressEvent(QMouseEvent *event) {
     GameData& d = GameData::instance();
     int mx = event->pos().x(); int my = event->pos().y();
@@ -45,8 +44,9 @@ void SceneMainMenu::mousePressEvent(QMouseEvent *event) {
         }
     }
 }
+//主页点击交互
 
-// ============== Home ==============
+
 void SceneHome::draw(QPainter &painter) {
     ResourceManager& r = ResourceManager::instance(); GameData& d = GameData::instance();
     if (homeState == HomeTVShow) {
@@ -67,6 +67,7 @@ void SceneHome::draw(QPainter &painter) {
         }
     }
 }
+//家庭场景绘制与盲盒功能场景交互
 void SceneHome::mousePressEvent(QMouseEvent *event) {
     GameData& d = GameData::instance();
     if (homeState == HomeTVShow) { if (QRect(305, 282, 28, 73).contains(event->pos())) homeState = HomeNormal; return; }
@@ -89,8 +90,10 @@ void SceneHome::keyPressEvent(QKeyEvent *event) {
         } else if (event->key() == Qt::Key_N) { homeState = HomeNormal; }
     }
 }
+//家庭睡觉与清空背包实现
 
-// ============== Festival ==============
+
+
 void SceneFestival::gameTick() { if (dialogueTimer > 0) dialogueTimer--; }
 void SceneFestival::fastTick() {
     if (emoteState >= 1 && emoteState <= 4) {
@@ -98,7 +101,7 @@ void SceneFestival::fastTick() {
     } else if (emoteState == 5) { emoteTimer++; if (emoteTimer >= 45) { emoteState = 0; } }
 }
 void SceneFestival::draw(QPainter &painter) {
-    ResourceManager& r = ResourceManager::instance(); GameData& d = GameData::instance();
+    ResourceManager& r = ResourceManager::instance();
     if(!r.feastBg.isNull()) painter.drawPixmap(0, 0, r.feastBg); else painter.fillRect(window->rect(), Qt::darkGreen);
 
     if (emoteState >= 1 && emoteState <= 4 && !r.emoAnim[emoteState-1].isNull()) painter.drawPixmap(305, 20, r.emoAnim[emoteState-1]);
@@ -119,6 +122,7 @@ void SceneFestival::draw(QPainter &painter) {
         painter.drawText(envRect.adjusted(50, 40, -50, -40), Qt::AlignLeft | Qt::TextWordWrap, currentDialogue);
     }
 }
+//节日场景绘制与皮埃尔商店
 void SceneFestival::mousePressEvent(QMouseEvent *event) {
     if (inShop) return;
     GameData& d = GameData::instance();
@@ -146,6 +150,7 @@ void SceneFestival::mousePressEvent(QMouseEvent *event) {
         }
     }
 }
+//带伤时哈维治疗设置
 void SceneFestival::keyPressEvent(QKeyEvent *event) {
     GameData& d = GameData::instance();
     if (inShop) {
@@ -158,11 +163,12 @@ void SceneFestival::keyPressEvent(QKeyEvent *event) {
         }
     }
 }
+//商店点击交互
 
-// ============== Farm ==============
+
+//完整农田系统逻辑，包括作物具体生长规律与猫咪移动，玩家移动加载
 void SceneFarm::gameTick() { if (isHarvesting) { harvestAnimTimer--; if (harvestAnimTimer <= 0) isHarvesting = false; } }
 
-// 【核心修复】激活猫咪AI
 void SceneFarm::fastTick() { GameData::instance().myCat.update(); }
 
 void SceneFarm::draw(QPainter &painter) {
@@ -256,7 +262,8 @@ void SceneFarm::handleAction() {
     }
 }
 
-// ============== Fishing ==============
+
+//钓鱼设置，游戏实现
 void SceneFishing::enter() { fishState = 0; isSpaceHeld = false; caughtFishIndex = -1; stickerTimer = 0; }
 void SceneFishing::gameTick() {
     if (fishState == 1) { fishTimer--; if (fishTimer <= 0) { fishState = 2; fishTimer = 5; } }
@@ -302,7 +309,7 @@ void SceneFishing::draw(QPainter &painter) {
 
     painter.setPen(Qt::white); QFont f("Comic Sans MS", 16, QFont::Bold); painter.setFont(f);
 
-    // 【核心修复】画出华丽的上钩贴纸！
+    //加上“上钩了”
     if (stickerTimer > 0) {
         if (!r.sticker.isNull()) painter.drawPixmap(320 - r.sticker.width()/2, 180, r.sticker);
         else { painter.setPen(Qt::yellow); f.setPointSize(32); painter.setFont(f); painter.drawText(QRect(0, 180, 640, 50), Qt::AlignCenter, "上钩了!"); }
@@ -316,7 +323,7 @@ void SceneFishing::draw(QPainter &painter) {
         painter.setBrush(QColor(0, 0, 0, 150)); painter.drawRect(gameX, gameY, 40, 300);
         painter.setBrush(QColor(0, 255, 0, 180)); painter.drawRect(gameX, gameY + barY, 40, 50);
 
-        // 【核心修复】如果没加载出鱼图标，必须画一个红球，防止它消失！
+        //如果没加载出鱼图标，画一个红球调试
         if (!r.fishIcon.isNull()) painter.drawPixmap(gameX + 5, gameY + fishY, r.fishIcon);
         else { painter.setBrush(Qt::red); painter.drawEllipse(gameX + 10, gameY + fishY, 20, 20); }
 
@@ -365,7 +372,7 @@ void SceneFishing::keyPressEvent(QKeyEvent *event) {
             } else { d.globalMsg = "体力不够了..."; d.globalMsgTimer = 15; }
         } else if (fishState == 2) {
             fishState = 3; barY = 150; barVy = 0; fishY = 150; fishTarget = 150; catchProgress = 30;
-            stickerTimer = 30; // 触发上钩贴纸
+            stickerTimer = 30;
         } else if (fishState == 4) {
             if (hasTreasure && treasureState == 0) treasureState = 1;
             else if (!hasTreasure || treasureState >= 6) fishState = 0;
@@ -374,7 +381,8 @@ void SceneFishing::keyPressEvent(QKeyEvent *event) {
 }
 void SceneFishing::keyReleaseEvent(QKeyEvent *event) { if (event->key() == Qt::Key_Space) isSpaceHeld = false; }
 
-// ============== Combat ==============
+
+//节奏游戏对战界面绘制
 void SceneCombat::enter() { initLevel(false); }
 void SceneCombat::initLevel(bool nextLevel) {
     playerHp = 100; if (!nextLevel) level = 1;
@@ -484,7 +492,9 @@ void SceneCombat::keyPressEvent(QKeyEvent *event) {
     if (event->key() == Qt::Key_Space) processHit(0); else if (event->key() == Qt::Key_F) processHit(1);
 }
 
-// ============== Easter ==============
+
+
+//复活节彩蛋游戏逻辑
 void SceneEaster::enter() {
     found = 0; timeLeft = 75; ended = false; eggs.clear();
     auto rng = QRandomGenerator::global();

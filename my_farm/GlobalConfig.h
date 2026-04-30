@@ -30,4 +30,5 @@ struct EasterEgg { QRect rect; bool found; };
 
 enum HomeState { HomeNormal, HomeTVPrompt, HomeTVShow };
 
-#endif // GLOBALCONFIG_H
+#endif
+//全局配置头文件，定义了所有枚举类型、参数和核心数据结构

@@ -4,7 +4,7 @@
 
 GameWindow::GameWindow(QWidget *parent) : QWidget(parent), currentState(MainMenu) {
     setFixedSize(640, 640);
-    setWindowTitle("星露谷 (纯净OOP工业版)");
+    setWindowTitle("星露农场");
 
     exitBtnRect = QRect(15, 570, 64, 54);
 
@@ -26,14 +26,14 @@ GameWindow::GameWindow(QWidget *parent) : QWidget(parent), currentState(MainMenu
 GameWindow::~GameWindow() {
     for (int i = 0; i < 7; ++i) delete scenes[i];
 }
-
+//初始化所有游戏窗口与子系统
 void GameWindow::changeScene(int stateIndex) {
     if (stateIndex >= 0 && stateIndex < 7) {
         currentState = stateIndex;
         scenes[currentState]->enter();
     }
 }
-
+//场景切换逻辑
 void GameWindow::gameTick() {
     GameData& d = GameData::instance();
     d.timeTicks++;
@@ -71,7 +71,7 @@ void GameWindow::gameTick() {
     if (d.globalMsgTimer > 0) d.globalMsgTimer--;
     scenes[currentState]->gameTick();
 }
-
+//作物生长系统与全局时间逻辑
 void GameWindow::fastTick() {
     scenes[currentState]->fastTick();
     update();
@@ -90,11 +90,11 @@ void GameWindow::keyPressEvent(QKeyEvent *event) {
 }
 
 void GameWindow::keyReleaseEvent(QKeyEvent *event) {
-    // 【核心修复】拦截长按键盘连发！解决钓鱼按不住空格的问题！
+    //给钓鱼上了难度
     if (event->isAutoRepeat()) return;
     scenes[currentState]->keyReleaseEvent(event);
 }
-
+//鼠标键盘交互处理
 void GameWindow::paintEvent(QPaintEvent *event) {
     Q_UNUSED(event); QPainter painter(this);
 
@@ -131,3 +131,4 @@ void GameWindow::drawGlobalHUD(QPainter &painter) {
     painter.setBrush((d.energy > 20) ? Qt::green : Qt::red); painter.drawRect(460 + 60, 53, qMax(0, eWidth), 12);
     if (d.isInjured) { painter.setPen(Qt::red); painter.drawText(460, 95, "Status: INJURED!!"); }
 }
+//辅助绘制整体场景

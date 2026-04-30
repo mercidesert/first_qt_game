@@ -18,6 +18,9 @@ public:
     int frame;
     int animTimer, actionTimer;
     int emoteState, emoteTimer, emoteId;
+    int width=48;
+    int height=48;
 };
 
-#endif // FARMCAT_H
+#endif
+//定义农场里的猫类，设定动画与动作、交互控制等

@@ -7,7 +7,7 @@
 #include "GameWindow.h"
 
 class SceneMainMenu : public IScene {
-    float birdX = 640.0f; // 【修改】从右侧640开始飞
+    float birdX = 640.0f;
     int fastAnimTimer = 0, fastAnimFrame = 0;
 public:
     SceneMainMenu(GameWindow* w) : IScene(w) {}
@@ -100,4 +100,5 @@ public:
     void keyPressEvent(QKeyEvent *event) override;
 };
 
-#endif // SCENES_H
+#endif
+//游戏所有场景类的头文件，实现了7个具体场景（主菜单、家园、节日、农场、钓鱼、战斗、彩蛋），每个场景都继承自IScene接口并实现各自的游戏逻辑、更新和绘制方法

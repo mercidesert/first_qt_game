@@ -20,4 +20,5 @@ public:
     virtual void keyReleaseEvent(QKeyEvent *event) {}
     virtual void mousePressEvent(QMouseEvent *event) {}
 };
-#endif // ISCENE_H
+#endif
+//场景接口类，定义了游戏所有状态需要实现的统一方法，通过多态让GameWindow统一管理不同场景

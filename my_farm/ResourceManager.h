@@ -23,4 +23,5 @@ public:
 private:
     ResourceManager() = default;
 };
-#endif // RESOURCEMANAGER_H
+#endif
+//资源管理器单例类，统一加载和管理游戏中所有图片资源，方便各场景通过静态接口获取QPixmap进行绘制
