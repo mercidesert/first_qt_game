@@ -24,6 +24,7 @@ public:
     void draw(QPainter &painter) override;
     void mousePressEvent(QMouseEvent *event) override;
     void keyPressEvent(QKeyEvent *event) override;
+    void onCancel() override;
 };
 
 class SceneFestival : public IScene {
@@ -39,6 +40,7 @@ public:
     void draw(QPainter &painter) override;
     void mousePressEvent(QMouseEvent *event) override;
     void keyPressEvent(QKeyEvent *event) override;
+    void onCancel() override;
 };
 
 class SceneFarm : public IScene {
@@ -53,6 +55,7 @@ public:
     void mousePressEvent(QMouseEvent *event) override;
     void keyPressEvent(QKeyEvent *event) override;
     void keyReleaseEvent(QKeyEvent *event) override;
+    void onCancel() override;
 };
 
 class SceneFishing : public IScene {
@@ -70,6 +73,7 @@ public:
     void draw(QPainter &painter) override;
     void keyPressEvent(QKeyEvent *event) override;
     void keyReleaseEvent(QKeyEvent *event) override;
+    void onCancel() override;
 };
 
 class SceneCombat : public IScene {
@@ -85,6 +89,7 @@ public:
     void fastTick() override;
     void draw(QPainter &painter) override;
     void keyPressEvent(QKeyEvent *event) override;
+    void onCancel() override;
 };
 
 class SceneEaster : public IScene {
@@ -98,6 +103,7 @@ public:
     void draw(QPainter &painter) override;
     void mousePressEvent(QMouseEvent *event) override;
     void keyPressEvent(QKeyEvent *event) override;
+    void onCancel() override;
 };
 
 #endif

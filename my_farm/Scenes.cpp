@@ -10,7 +10,7 @@ void SceneMainMenu::fastTick() {
     birdX -= 2.0f;
     if (birdX < -64.0f) birdX = 640.0f;
 }
-
+//时间状态与小鸟飞行逻辑
 void SceneMainMenu::draw(QPainter &painter) {
     ResourceManager& r = ResourceManager::instance();
     if(!r.titleBg.isNull()) painter.drawPixmap(0, 0, r.titleBg); else painter.fillRect(window->rect(), QColor(50, 80, 120));
@@ -44,7 +44,7 @@ void SceneMainMenu::mousePressEvent(QMouseEvent *event) {
         }
     }
 }
-//主页点击交互
+//点击交互
 
 
 void SceneHome::draw(QPainter &painter) {
@@ -124,6 +124,16 @@ void SceneFestival::draw(QPainter &painter) {
 }
 //节日场景绘制与皮埃尔商店
 void SceneFestival::mousePressEvent(QMouseEvent *event) {
+    QRect exitBtnRect(15, 570, 64, 54);
+
+    // 检测退出按钮
+    if (exitBtnRect.contains(event->pos())) {
+        if (inShop) {
+            inShop = false;  // 关闭商店
+            return;
+        }
+    }
+
     if (inShop) return;
     GameData& d = GameData::instance();
     QRect emoteRect(285, 55, 72, 45);
@@ -153,7 +163,14 @@ void SceneFestival::mousePressEvent(QMouseEvent *event) {
 //带伤时哈维治疗设置
 void SceneFestival::keyPressEvent(QKeyEvent *event) {
     GameData& d = GameData::instance();
+
     if (inShop) {
+        // 按 ESC 关闭商店
+        if (event->key() == Qt::Key_Escape) {
+            inShop = false;
+            return;
+        }
+        // 购买种子
         if (event->key() == Qt::Key_1) {
             if (d.gold >= 20) { d.gold -= 20; d.inventory.strawberrySeeds++; d.globalMsg = "购买草莓种子成功！"; d.globalMsgTimer=10; }
             else { d.globalMsg = "金币不足！"; d.globalMsgTimer=10; }
@@ -283,7 +300,7 @@ void SceneFishing::fastTick() {
         if (catchProgress >= 100) {
             fishState = 4; caughtFishIndex = rng->bounded(6);
             GameData::instance().inventory.fishes[caughtFishIndex]++;
-            if (rng->bounded(100) < 50) {
+            if (rng->bounded(100) < 100) {
                 hasTreasure = true; treasureState = 0; treasureRewardType = rng->bounded(3);
                 treasureRewardAmount = (treasureRewardType == 0) ? rng->bounded(50, 150) : rng->bounded(1, 4);
             } else hasTreasure = false;
@@ -539,3 +556,23 @@ void SceneEaster::mousePressEvent(QMouseEvent *event) {
 void SceneEaster::keyPressEvent(QKeyEvent *event) {
     if (ended && event->key() == Qt::Key_Space) window->changeScene(Festival);
 }
+// 处理各个场景的退出逻辑
+
+void SceneHome::onCancel() {
+    if (homeState != HomeNormal) homeState = HomeNormal; // 关闭电视
+    else window->changeScene(MainMenu); // 退回主菜单
+}
+
+void SceneFestival::onCancel() {
+    if (inShop) inShop = false; // 关闭皮埃尔商店
+    else window->changeScene(MainMenu); // 退回主菜单
+}
+
+void SceneEaster::onCancel() {
+    window->changeScene(Festival);
+}
+
+// 农场、钓鱼、战斗直接退回主菜单
+void SceneFarm::onCancel() { window->changeScene(MainMenu); }
+void SceneFishing::onCancel() { window->changeScene(MainMenu); }
+void SceneCombat::onCancel() { window->changeScene(MainMenu); }

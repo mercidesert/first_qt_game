@@ -16,6 +16,7 @@ void ResourceManager::loadAll() {
     for (int d = 0; d < 4; ++d) {
         for (int f = 0; f < 4; ++f) { playerWalk[d][f] = ls(QString(":/images/player_%1_%2.png").arg(dirNames[d]).arg(f + 1)); }
     }
+//人物移动逻辑加载
     strawSeed = ls(":/images/straw_1_seed.png"); strawSeedling = ls(":/images/straw_2_seedling.png");
     strawGrown = ls(":/images/straw_3_grown.png"); strawFruiting = ls(":/images/straw_4_fruiting.png");
     sunSeed = ls(":/images/sun_1_seed.png"); sunSeedling = ls(":/images/sun_2_seedling.png");

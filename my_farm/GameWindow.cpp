@@ -29,13 +29,12 @@ GameWindow::GameWindow(QWidget *parent) : QWidget(parent), currentState(MainMenu
     connect(fastTimer, &QTimer::timeout, this, &GameWindow::fastTick);
     fastTimer->start(33);
 
-    // ========== 背景音乐 (Qt 6) ==========
     bgmPlayer = new QMediaPlayer(this);
     audioOutput = new QAudioOutput(this);
 
-    audioOutput->setVolume(0.5);  // 音量 50%
+    audioOutput->setVolume(0.5);
     bgmPlayer->setAudioOutput(audioOutput);
-    bgmPlayer->setSource(QUrl("qrc:/images/bgm.mp3"));  // 确认路径正确
+    bgmPlayer->setSource(QUrl("qrc:/images/bgm.mp3"));
     bgmPlayer->setLoops(QMediaPlayer::Infinite);  // 无限循环
     bgmPlayer->play();
 }
@@ -43,7 +42,6 @@ GameWindow::GameWindow(QWidget *parent) : QWidget(parent), currentState(MainMenu
 GameWindow::~GameWindow() {
     for (int i = 0; i < 7; ++i) delete scenes[i];
 
-    // 清理音乐资源（可选，Qt 会自动清理）
     if (bgmPlayer) {
         bgmPlayer->stop();
     }
@@ -101,16 +99,19 @@ void GameWindow::fastTick() {
 
 void GameWindow::mousePressEvent(QMouseEvent *event) {
     if (currentState != MainMenu && exitBtnRect.contains(event->pos())) {
-        changeScene(MainMenu); return;
+        scenes[currentState]->onCancel();
+        return;
     }
     scenes[currentState]->mousePressEvent(event);
 }
 
 void GameWindow::keyPressEvent(QKeyEvent *event) {
-    if (event->key() == Qt::Key_Escape && currentState != MainMenu) { changeScene(MainMenu); return; }
+    if (event->key() == Qt::Key_Escape && currentState != MainMenu) {
+        scenes[currentState]->onCancel();
+        return;
+    }
     scenes[currentState]->keyPressEvent(event);
 }
-
 void GameWindow::keyReleaseEvent(QKeyEvent *event) {
     //给钓鱼上了难度
     if (event->isAutoRepeat()) return;
